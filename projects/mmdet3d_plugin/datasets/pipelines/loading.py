@@ -139,7 +139,7 @@ class LoadPointsFromMultiSweepsWithPadding(object):
         """str: Return a string that describes the module."""
         return f'{self.__class__.__name__}(sweeps_num={self.sweeps_num})'
 
-
+#@note loding occupancy GT data
 @PIPELINES.register_module()
 class LoadOccupancyGT(object):
     """load occupancy GT data
@@ -153,7 +153,7 @@ class LoadOccupancyGT(object):
         self.occupancy_classes = occupancy_classes
 
     def __call__(self, results):
-        occ_gt_path = results['occ_gt_path']
+        occ_gt_path = results['occ_gt_path']    
         occ_gts = np.load(occ_gt_path)  # (n, 2)
         if self.data_type == 'semantic_kitti' and self.relabel:
             """

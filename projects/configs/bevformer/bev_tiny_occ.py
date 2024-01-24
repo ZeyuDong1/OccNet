@@ -1,6 +1,6 @@
 # tiny model ResNet50
 # occupancy_size = 0.5
-
+#@note name
 _base_ = [
     '../datasets/custom_nus-3d.py',
     '../_base_/default_runtime.py'
@@ -195,12 +195,12 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=1,
+    samples_per_gpu=2,
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         use_occ_gts=True, 
-        load_occ_lidarseg=True,
+        # load_occ_lidarseg=True,
         data_root=data_root,
         ann_file='data/occ_gt_release_v1_0/nuscenes_infos_temporal_train_occ_gt.pkl',
         pipeline=train_pipeline,
@@ -212,13 +212,13 @@ data = dict(
         queue_length=queue_length,
         box_type_3d='LiDAR'),
     val=dict(type=dataset_type,
-             load_occ_lidarseg=True,
+            #  load_occ_lidarseg=True,
              data_root=data_root,
              ann_file='data/occ_gt_release_v1_0/nuscenes_infos_temporal_val_occ_gt.pkl',
              pipeline=test_pipeline,  bev_size=(bev_h_, bev_w_),
              classes=class_names, modality=input_modality, samples_per_gpu=1),
     test=dict(type=dataset_type,
-              load_occ_lidarseg=True,
+            #   load_occ_lidarseg=True,
               data_root=data_root,
               ann_file='data/occ_gt_release_v1_0/nuscenes_infos_temporal_val_occ_gt.pkl',
               pipeline=test_pipeline, bev_size=(bev_h_, bev_w_),

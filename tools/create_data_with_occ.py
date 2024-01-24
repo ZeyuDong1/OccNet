@@ -5,6 +5,7 @@ import mmcv
 import os 
 import json 
 import tqdm
+
 def merge(root_dir, occ_gt_dir):
     for data_type in ['train', 'val']:
         data_path = f'{root_dir}/nuscenes_infos_temporal_{data_type}.pkl'
@@ -19,6 +20,7 @@ def merge(root_dir, occ_gt_dir):
             token=info['token']
             info['occ_gt_path'] = occ_data[scene_name][token]['occ_gt_path']
             info['flow_gt_path'] = occ_data[scene_name][token]['flow_gt_path']
+            print(info['flow_gt_path'])
             info['occ_invalid_path'] = occ_data[scene_name][token]['occ_invalid_path']
             save_infos.append(info)
 
@@ -30,4 +32,15 @@ def merge(root_dir, occ_gt_dir):
 if __name__ == '__main__':
     root_dir = 'data/nuscenes'
     occ_git_dir = 'data/occ_gt_release_v1_0'
+    root_dir = '/dataset/nuscenes'
+    occ_git_dir = '/dataset/occ_gt_release_v1_0'
     merge(root_dir, occ_git_dir)
+
+
+# data_types = ['train', 'val']
+# data_type = data_types[0]
+# occ_gt_dir = 'data/occ_gt_release_v1_0'
+# json_path = f'{occ_gt_dir}/occ_gt_{data_type}.json'
+# occ_data = json.load(open(json_path))
+# flow_gt_path= occ_data[scene_name][token]['flow_gt_path']
+# occ_data[scene_name][token]['occ_gt_path']

@@ -350,7 +350,7 @@ class CustomNuScenesDataset(NuScenesDataset):
             gt_occupancy = np.ones(self.voxel_num, dtype=np.uint8)*self.occupancy_classes
             gt_occupancy[occ_index] = occ_class  # (num_voxels)
 
-            # load occ_invalid
+            #@note load occ_invalid
             if 'occ_invalid_path' in info:
                 occ_invalid_index = np.load(info['occ_invalid_path'])
                 visible_mask = np.ones(self.voxel_num, dtype=np.uint8)

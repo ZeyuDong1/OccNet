@@ -1,7 +1,7 @@
 # ---------------------------------------------
 # Copyright (c) OpenMMLab. All rights reserved.
 # ---------------------------------------------
-
+#@audit title
 from tkinter.messagebox import NO
 import torch
 from mmcv.runner import force_fp32, auto_fp16
@@ -171,6 +171,7 @@ class BEVFormer(MVXTwoStageDetector):
         Returns:
             dict: Losses of each branch.
         """
+        #@note 使用 head
         outs = self.pts_bbox_head(
             img_feats, img_metas, prev_bev)
 

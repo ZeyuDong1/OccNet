@@ -126,6 +126,7 @@ class BEVFormerOccupancyHead(DETRHead):
             transformer.decoder = None   # define 3D detection decoder
         super(BEVFormerOccupancyHead, self).__init__(
             *args, transformer=transformer, **kwargs)
+        
         self.code_weights = nn.Parameter(torch.tensor(
             self.code_weights, requires_grad=False), requires_grad=False)
     
@@ -299,7 +300,7 @@ class BEVFormerOccupancyHead(DETRHead):
         occ_pred = occ_pred_forward
 
         return occ_pred
-
+#@audit forward function
     @auto_fp16(apply_to=('mlvl_feats'))
     def forward(self, mlvl_feats, img_metas, prev_bev=None,  only_bev=False):
         """Forward function.
@@ -504,7 +505,7 @@ class BEVFormerOccupancyHead(DETRHead):
 
         outputs_classes = torch.stack(outputs_classes)
         outputs_coords = torch.stack(outputs_coords)
-
+        #@note 模型预测结果
         outs = {
             'bev_embed': bev_embed,
             'all_cls_scores': outputs_classes,

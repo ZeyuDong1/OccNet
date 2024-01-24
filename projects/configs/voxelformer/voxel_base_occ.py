@@ -14,6 +14,9 @@ point_cloud_range = [-50.0, -50.0, -5.0, 50.0, 50.0, 3.0]
 voxel_size = [0.2, 0.2, 8]
 occupancy_size = [0.5, 0.5, 0.5]
 
+#查看voxel size
+
+
 img_norm_cfg = dict(
     mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 # For nuScenes we usually do 10-class detection

@@ -195,7 +195,7 @@ class PhotoMetricDistortionMultiViewImage:
         return repr_str
 
 
-
+#@note CustomCollect3D
 @PIPELINES.register_module()
 class CustomCollect3D(object):
     """Collect data from the loader relevant to the specific task.

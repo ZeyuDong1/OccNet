@@ -1,6 +1,6 @@
 # tiny model ResNet50
 # occupancy_size = 0.5
-
+#@audit title: 
 _base_ = [
     '../datasets/custom_nus-3d.py',
     '../_base_/default_runtime.py'
@@ -15,7 +15,7 @@ point_cloud_range = [-50.0, -50.0, -5.0, 50.0, 50.0, 3.0]
 voxel_size = [0.2, 0.2, 8]
 occupancy_size = [0.5, 0.5, 0.5]
 
-
+only_occ=True # 无det但是有flow和occ
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -27,7 +27,8 @@ class_names = [
 ]
 
 input_modality = dict(
-    use_lidar=True,
+    # use_lidar=True,
+    use_lidar=False,
     use_camera=True,
     use_radar=False,
     use_map=False,
@@ -41,12 +42,14 @@ _num_levels_ = 1
 bev_h_ = 200
 bev_w_ = 200
 queue_length = 3 # each sequence contains `queue_length` frames.
-
+#@note model
 model = dict(
     type='BEVFormer',
     use_grid_mask=True,
     video_test_mode=True,
     use_occ_gts=True,
+    only_det=False,
+    only_occ=only_occ,#@note 不使用Det但是使用Occ 
     pretrained=dict(img='torchvision://resnet50'),
     img_backbone=dict(
         type='ResNet',
@@ -69,6 +72,7 @@ model = dict(
         type='BEVFormerOccupancyHead',
         bev_h=bev_h_,
         bev_w=bev_w_,
+        only_occ=only_occ,#@note 这里也需要添加only occ
         num_query=900,
         num_classes=10,
         in_channels=_dim_,
@@ -134,7 +138,8 @@ model = dict(
                     feedforward_channels=_ffn_dim_,
                     ffn_dropout=0.1,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')))),
+                                     'ffn', 'norm')))
+                                     ),
         bbox_coder=dict(
             type='NMSFreeCoder',
             post_center_range=[-61.2, -61.2, -10.0, 61.2, 61.2, 10.0],
@@ -174,7 +179,10 @@ model = dict(
             cls_cost=dict(type='FocalLossCost', weight=2.0),
             reg_cost=dict(type='BBox3DL1Cost', weight=0.25),
             iou_cost=dict(type='IoUCost', weight=0.0), # Fake cost. This is just to make it compatible with DETR head.
-            pc_range=point_cloud_range))))
+            pc_range=point_cloud_range)
+        )
+        )
+        )
 
 dataset_type = 'CustomNuScenesDataset'
 data_root = 'data/nuscenes/'
@@ -183,8 +191,10 @@ file_client_args = dict(backend='disk')
 train_pipeline = [
     dict(type='LoadMultiViewImageFromFiles', to_float32=True),
     dict(type='PhotoMetricDistortionMultiViewImage'),
-    dict(type='LoadPointsFromFile', coord_type='LIDAR', load_dim=3, use_dim=3,
-         file_client_args=file_client_args),
+    #note 这里的dim不能为3
+    # dict(type='LoadPointsFromFile', coord_type='LIDAR', load_dim=3, use_dim=3,file_client_args=file_client_args),
+    # dict(type='LoadPointsFromFile', coord_type='LIDAR', load_dim=5, use_dim=5,
+    #      file_client_args=file_client_args),
     dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True, with_attr_label=False),
     dict(type='LoadOccupancyGT'),
     dict(type='LoadFlowGT'),  # occupancy flow
@@ -194,7 +204,8 @@ train_pipeline = [
     dict(type='RandomScaleImageMultiViewImage', scales=[0.5]),
     dict(type='PadMultiViewImage', size_divisor=32),
     dict(type='CustomDefaultFormatBundle3D', class_names=class_names),
-    dict(type='CustomCollect3D', keys=['gt_bboxes_3d', 'gt_labels_3d', 'img', 'points', 'occ_gts', 'flow_gts'])
+    # dict(type='CustomCollect3D', keys=['gt_bboxes_3d', 'gt_labels_3d', 'img', 'points', 'occ_gts', 'flow_gts'])
+    dict(type='CustomCollect3D', keys=['gt_bboxes_3d', 'gt_labels_3d', 'img', 'occ_gts', 'flow_gts'])
 ]
 
 test_pipeline = [

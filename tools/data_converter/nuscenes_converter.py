@@ -210,6 +210,21 @@ def _fill_trainval_infos(nusc,
         can_bus = _get_can_bus_info(nusc, nusc_can_bus, sample)
         scene_name = nusc.get('scene', sample['scene_token'])['name']
         ##
+        # info = {
+        #     'lidar_path': lidar_path,
+        #     'token': sample['token'],
+        #     'prev': sample['prev'],
+        #     'next': sample['next'],
+        #     'can_bus': can_bus,
+        #     'frame_idx': frame_idx,  # temporal related info
+        #     'sweeps': [],
+        #     'cams': dict(),
+        #     'scene_token': sample['scene_token'],  # temporal related info
+        #     'scene_name': scene_name,
+        #     'lidar2ego_translation': cs_record['translation'],
+        #     'ego2global_rotation': pose_record['rotation'],
+        #     'timestamp': sample['timestamp'],
+        # }
         info = {
             'lidar_path': lidar_path,
             'token': sample['token'],
@@ -222,6 +237,8 @@ def _fill_trainval_infos(nusc,
             'scene_token': sample['scene_token'],  # temporal related info
             'scene_name': scene_name,
             'lidar2ego_translation': cs_record['translation'],
+            'lidar2ego_rotation': cs_record['rotation'],
+            'ego2global_translation': pose_record['translation'],
             'ego2global_rotation': pose_record['rotation'],
             'timestamp': sample['timestamp'],
         }

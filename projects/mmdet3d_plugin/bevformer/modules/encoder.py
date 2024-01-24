@@ -21,7 +21,7 @@ from mmcv.utils import ext_loader
 ext_module = ext_loader.load_ext(
     '_ext', ['ms_deform_attn_backward', 'ms_deform_attn_forward'])
 
-
+#@note BEVFormerEncoder
 @TRANSFORMER_LAYER_SEQUENCE.register_module()
 class BEVFormerEncoder(TransformerLayerSequence):
 

@@ -340,9 +340,9 @@ if __name__ == '__main__':
                 points, labels, flow_values, flow_labels = obtain_points_label_flow(occ_gt, flow_gt)
                 flow_gt_image = visualize_flow(points, labels, flow_values, flow_labels, ego_dict)
 
-                flow_pred = np.load(os.path.join(data_dir, scene_name, pred_dir, pred_flow_file_name))
-                points, labels, flow_values, flow_labels = obtain_points_label_flow(occ_pred, flow_pred)
-                flow_pred_image = visualize_flow(points, labels, flow_values, flow_labels, ego_dict)
+                # flow_pred = np.load(os.path.join(data_dir, scene_name, pred_dir, pred_flow_file_name))
+                # points, labels, flow_values, flow_labels = obtain_points_label_flow(occ_pred, flow_pred)
+                # flow_pred_image = visualize_flow(points, labels, flow_values, flow_labels, ego_dict)
 
             if out_flow:
                 plt.figure(figsize=(12, 15))
@@ -360,7 +360,7 @@ if __name__ == '__main__':
                 plt.imshow(flow_gt_image)
                 plt.subplot(3, 2, 6)  
                 plt.axis('off')
-                plt.imshow(flow_pred_image)
+                # plt.imshow(flow_pred_image)
 
                 plt.tight_layout()
                 plt.subplots_adjust(left=0.0, right=1,
