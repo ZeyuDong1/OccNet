@@ -24,6 +24,7 @@ class BEVFormer(MVXTwoStageDetector):
     """
 
     def __init__(self,
+                 iter_dict=None,
                  use_grid_mask=False,
                  pts_voxel_layer=None,
                  pts_voxel_encoder=None,
@@ -173,6 +174,7 @@ class BEVFormer(MVXTwoStageDetector):
         """
         outs = self.pts_bbox_head(
             img_feats, img_metas, prev_bev)
+        
 
         if self.dataset_type == 'semantic_kitti':
             loss_inputs = [occ_gts, outs]
