@@ -38,7 +38,7 @@
 
         },   
         {
-            "name": "bev_tiny_det_occ_flow",  
+            "name": "bev_tiny_occ_flow",  
             "type": "python",
             "request": "launch",
             // "program": "/home/Projects/FB-BEV/tools/train.py",
@@ -50,7 +50,7 @@
                 "--nproc_per_node=1",
                 "--master_port=29500",
                 "tools/train.py",
-                "projects/configs/bevformer/bev_tiny_det_occ_flow.py",
+                "projects/configs/bevformer/bev_tiny_occ_flow.py",
                 "--seed", "0",
                 "--launcher", "pytorch"
             ],

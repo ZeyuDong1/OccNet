@@ -870,7 +870,7 @@ class BEVFormerOccupancyHead(DETRHead):
             loss_dict[f'd{num_dec_layer}.loss_bbox'] = loss_bbox_i
             num_dec_layer += 1
         return loss_dict
-
+#@note 计算loss
     @force_fp32(apply_to=('preds_dicts'))
     def loss_only_occupancy(self,
                         gt_bboxes_list,

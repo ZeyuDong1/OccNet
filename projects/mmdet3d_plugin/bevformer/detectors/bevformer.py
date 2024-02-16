@@ -15,6 +15,7 @@ import numpy as np
 import mmdet3d
 from projects.mmdet3d_plugin.models.utils.bricks import run_time
 from torch.nn import functional as F
+import torch.distributed as dist
 
 @DETECTORS.register_module()
 class BEVFormer(MVXTwoStageDetector):
@@ -24,6 +25,7 @@ class BEVFormer(MVXTwoStageDetector):
     """
 
     def __init__(self,
+                 iter_dict=None,
                  use_grid_mask=False,
                  pts_voxel_layer=None,
                  pts_voxel_encoder=None,
@@ -60,7 +62,7 @@ class BEVFormer(MVXTwoStageDetector):
         self.fp16_enabled = False
         self.dataset_type=dataset_type
         self.can_bus_in_dataset = can_bus_in_dataset
-
+        self.iter_dict = iter_dict
         # temporal
         self.video_test_mode = video_test_mode
         self.prev_frame_info = {
@@ -183,11 +185,21 @@ class BEVFormer(MVXTwoStageDetector):
                 loss_inputs = [gt_bboxes_3d, gt_labels_3d, outs]
                 losses = self.pts_bbox_head.loss(*loss_inputs, img_metas=img_metas)
             elif self.only_occ:
+                
+       
                 loss_inputs = [gt_bboxes_3d, gt_labels_3d, pts_feats, occ_gts, flow_gts, outs]
                 losses = self.pts_bbox_head.loss_only_occupancy(*loss_inputs, img_metas=img_metas)
             else:
                 loss_inputs = [gt_bboxes_3d, gt_labels_3d, pts_feats, occ_gts, flow_gts, outs]
                 losses = self.pts_bbox_head.loss(*loss_inputs, img_metas=img_metas)
+            if dist.get_rank() == 0:
+                if self.iter_dict['iter'] <0:
+                    pass
+                elif self.iter_dict['iter'] <10:
+                    np.save(f'./flowsPre/flow_output_{self.iter_dict["epoch"]}_{self.iter_dict["iter"]}.npy', outs['flow_preds'].detach().cpu().numpy())
+                    np.save(f'./flowsPre/occ_output_{self.iter_dict["epoch"]}_{self.iter_dict["iter"]}.npy', outs['occupancy_preds'].detach().cpu().numpy())
+                    np.save(f'./flowsPre/flow_gt_{self.iter_dict["epoch"]}_{self.iter_dict["iter"]}.npy', flow_gts[0][0].detach().cpu().numpy())
+                    np.save(f'./flowsPre/occ_gt_{self.iter_dict["epoch"]}_{self.iter_dict["iter"]}.npy', occ_gts[0][0].detach().cpu().numpy())
         return losses
 
     def forward_dummy(self, img):
