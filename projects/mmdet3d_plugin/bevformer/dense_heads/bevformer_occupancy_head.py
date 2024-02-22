@@ -198,7 +198,8 @@ class BEVFormerOccupancyHead(DETRHead):
             occ_branch.append(Linear(self.occ_dims, self.occ_dims))
             occ_branch.append(nn.LayerNorm(self.occ_dims))
             occ_branch.append(nn.ReLU(inplace=True))
-        occ_branch.append(Linear(self.occ_dims, self.occupancy_classes))
+        occ_branch.append(Linear(self.occ_dims, self.
+                                 ))
         self.occ_branches = nn.Sequential(*occ_branch)
         
         # upsampling branch

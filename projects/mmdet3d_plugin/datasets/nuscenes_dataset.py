@@ -323,6 +323,80 @@ class CustomNuScenesDataset(NuScenesDataset):
         detail['{}/mAP'.format(metric_prefix)] = metrics['mean_ap']
         return detail
 
+    def EPE(self, pred_flow, true_flow, mask=None):
+            # [batch_size, height, width, 2]
+            pred_flow = torch.tensor(pred_flow, dtype=torch.float32)
+            true_flow = torch.tensor(true_flow, dtype=torch.float32)
+            diff = true_flow - pred_flow
+            # [batch_size, height, width, 1], [batch_size, height, width, 1]
+            true_flow_dx, true_flow_dy = torch.chunk(true_flow, 2, dim=-1)
+            # [batch_size, height, width, 1]
+            flow_exists = torch.logical_or(
+                torch.not_equal(true_flow_dx, 0.0),
+                torch.not_equal(true_flow_dy, 0.0),
+            )
+            flow_exists = flow_exists.to(torch.float32)
+
+            # Check shapes.
+            #   tf.debugging.assert_shapes([
+            #       (true_flow_dx, ['batch_size', 'height', 'width', 1]),
+            #       (true_flow_dy, ['batch_size', 'height', 'width', 1]),
+            #       (diff, ['batch_size', 'height', 'width', 2]),
+            #   ])
+
+            diff = diff * flow_exists
+            # [batch_size, height, width, 1]
+            epe = torch.linalg.norm(diff, ord=2, dim=-1, keepdim=True)
+            # Scalar.
+            sum_epe = torch.sum(epe)
+            # Scalar.
+            sum_flow_exists = torch.sum(flow_exists)
+            # Scalar.
+            if sum_flow_exists == 0:
+                print('sum_flow_exists:000')
+            mean_epe = torch.nan_to_num(torch.div(
+                        sum_epe,
+                        sum_flow_exists), posinf=0, neginf=0)
+
+            #   tf.debugging.assert_shapes([
+            #       (epe, ['batch_size', 'height', 'width', 1]),
+            #       (sum_epe, []),
+            #       (mean_epe, []),
+            #   ])
+
+            return mean_epe
+        
+    def _flow_loss(
+            self,
+            true_flow: torch.Tensor,
+            pred_flow: torch.Tensor,
+            loss_weight: float = 1,
+        ) -> torch.Tensor:
+            """Computes L1 flow loss."""
+            pred_flow = torch.tensor(pred_flow, dtype=torch.float32)
+            true_flow = torch.tensor(true_flow, dtype=torch.float32)
+            diff = true_flow - pred_flow
+            # Ignore predictions in areas where ground-truth flow is zero.
+            # [batch_size, height, width, 1], [batch_size, height, width, 1]
+            true_flow_dx, true_flow_dy = torch.chunk(true_flow, 2, dim=-1)
+
+            # [batch_size, height, width, 1]
+            flow_exists = torch.logical_or(
+                torch.not_equal(true_flow_dx, 0.0),
+                torch.not_equal(true_flow_dy, 0.0),
+            )
+            flow_exists = flow_exists.to(torch.float32)
+            diff = diff * flow_exists
+            diff_norm = torch.linalg.norm(diff, ord=1, dim=-1)  # L1 norm.
+            diff_norm_sum = torch.sum(diff_norm)
+            flow_exists_sum = torch.sum(flow_exists) / 2 # / 2 since (dx, dy) is counted twice.
+            if torch.is_nonzero(flow_exists_sum):
+                mean_diff = torch.div(diff_norm_sum, flow_exists_sum)
+            else:
+                mean_diff = 0
+            return loss_weight * mean_diff
+            
+
     def evaluate_occ_iou(self, occupancy_results, flow_results, show_dir=None, 
                          save_interval=1, occ_threshold=0.25, runner=None):
         """ save the gt_occupancy_sparse and evaluate the iou metrics"""
@@ -338,6 +412,9 @@ class CustomNuScenesDataset(NuScenesDataset):
         # set the metrics
         self.eval_metrics = SSCMetrics(self.occupancy_classes+1, occ_type=self.occ_type)
         # loop the dataset
+        flow_EPE=0
+        flow_sum = 0
+        flow_loss= 0
         for index in tqdm(range(len(occupancy_results))):
             info = self.data_infos[index]
             scene_name = info['scene_name']
@@ -364,12 +441,16 @@ class CustomNuScenesDataset(NuScenesDataset):
             # load flow info
             flow_pred, flow_true = None, None
             if flow_results is not None:
+                #torch.float32
                 flow_pred_sparse = flow_results[index].cpu().numpy()
                 flow_gt_sparse = np.load(info['flow_gt_path']) 
                 flow_true, flow_pred = self.parse_flow_info(occ_gt_sparse, occ_pred_sparse, flow_gt_sparse, flow_pred_sparse)
-
+                flow_EPE += self.EPE(flow_pred, flow_true, mask=visible_mask)   
+                if self.EPE(flow_pred, flow_true, mask=visible_mask)!=0:
+                    print('flow_EPE:0000000000000000000000000000000000000000000000')
+                    flow_loss += self._flow_loss(flow_true, flow_pred, loss_weight=1)
+                    flow_sum += 1
             self.eval_metrics.add_batch(pred_occupancy, gt_occupancy, flow_pred=flow_pred, flow_true=flow_true, visible_mask=visible_mask)
-
             # save occ, flow, image
             if show_dir and index % save_interval == 0:
                 save_result = False
@@ -392,7 +473,8 @@ class CustomNuScenesDataset(NuScenesDataset):
                     image_save_path = osp.join(image_save_dir, '{:03d}.png'.format(frame_idx))
                     if 'surround_image_path' in info:
                         shutil.copyfile(info['surround_image_path'], image_save_path)
-
+        flow_EPE = flow_EPE/flow_sum
+        flow_loss = flow_loss/flow_sum
         eval_resuslt = self.eval_metrics.get_stats()
         print(f'======out evaluation metrics: {thre_str}=========')
         
@@ -402,7 +484,8 @@ class CustomNuScenesDataset(NuScenesDataset):
         print("iou: {:.2f}".format(eval_resuslt["iou"]))
         print("Precision: {:.4f}".format(eval_resuslt["precision"]))
         print("Recall: {:.4f}".format(eval_resuslt["recall"]))
-        
+        print("Flow EPE: {:.4f}".format(flow_EPE))
+        print("Flow Loss: {:.4f}".format(flow_loss))
         # flow_distance = eval_resuslt['flow_distance']
         # flow_states=['flow_distance_sta', 'flow_distance_mov', 'flow_distance_all']
         # for i in range(len(flow_states)):

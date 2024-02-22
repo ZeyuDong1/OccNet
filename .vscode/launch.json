@@ -60,6 +60,31 @@
             }
         },   
         {
+            "name": "test_bev_tiny_occ_flow",  
+            "type": "python",
+            "request": "launch",
+            // "program": "/home/Projects/FB-BEV/tools/train.py",
+            "program": "/root/miniconda3/envs/occ/lib/python3.7/site-packages/torch/distributed/launch.py",
+
+            "console": "integratedTerminal",
+            "args": [
+                "--master_addr=127.0.0.1",
+                "--nproc_per_node=1",
+                "--master_port=29500",
+                "tools/test.py",
+                "projects/configs/bevformer/bev_tiny_occ_flow.py",
+                "/nfs/projects/OccNet-1/work_dirs/bev_tiny_occ_flow/latest.pth",
+                "--seed", "0",
+                "--launcher", "pytorch",
+                "--show_dir","./val",
+                "--eval","iou"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "TORCH_DISTRIBUTED_DEBUG": "DETAIL"
+            }
+        },   
+        {
             "name": "tiny_occ",  
             "type": "python",
             "request": "launch",
